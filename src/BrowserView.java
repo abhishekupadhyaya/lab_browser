@@ -1,5 +1,7 @@
 import java.awt.Dimension;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.beans.value.ChangeListener;
@@ -91,7 +93,13 @@ public class BrowserView {
      * Display given URL.
      */
     public void showPage (String url) {
-        URL valid = myModel.go(url);
+        URL valid = null;
+		try {
+			valid = myModel.go(url);
+		} catch (BrowserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         if (url != null) {
             update(valid);
         }
@@ -126,12 +134,22 @@ public class BrowserView {
 
     // move to the next URL in the history
     private void next () {
-        update(myModel.next());
+        try {
+			update(myModel.next());
+		} catch (BrowserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     // move to the previous URL in the history
     private void back () {
-        update(myModel.back());
+        try {
+			update(myModel.back());
+		} catch (BrowserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     // change current URL to the home page, if set
@@ -141,7 +159,13 @@ public class BrowserView {
 
     // change page to favorite choice
     private void showFavorite (String favorite) {
-        showPage(myModel.getFavorite(favorite).toString());
+        try {
+			showPage(myModel.getFavorite(favorite).toString());
+		} catch (BrowserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
     }
 
     // update just the view to display given URL
@@ -182,7 +206,10 @@ public class BrowserView {
     // organize user's options for controlling/giving input to model
     private Node makeInputPanel () {
         VBox result = new VBox();
-        result.getChildren().addAll(makeNavigationPanel(), makePreferencesPanel());
+        result.getChildren().addAll(makeNavigationPanel());
+        for (Node n: makePreferencesPanel()) {
+            result.getChildren().addAll(n);
+        }
         return result;
     }
 
@@ -219,14 +246,29 @@ public class BrowserView {
     }
 
     // make buttons for setting favorites/home URLs
-    private Node makePreferencesPanel () {
-        HBox result = new HBox();
-        result.getChildren().add(makeButton("SetHomeCommand", event -> {
+    private List<Node> makePreferencesPanel () {
+        HBox home = new HBox();
+        HBox favorite = new HBox();
+        List<Node> result = new ArrayList<Node>();
+        EventHandler<ActionEvent> showHandler = new ShowPage();
+
+        home.getChildren().add(makeButton("SetHomeCommand", event -> {
             myModel.setHome();
             enableButtons();
         }));
+        favorite.getChildren().add(makeButton("AddFavoriteCommand", event -> {
+            addFavorite();
+            enableButtons();
+
+        }));
+        
+        result.add(home);
+        result.add(favorite);
+        //result.add(myFavorites);
         return result;
     }
+    
+    
 
     // makes a button using either an image or a label
     private Button makeButton (String property, EventHandler<ActionEvent> handler) {
